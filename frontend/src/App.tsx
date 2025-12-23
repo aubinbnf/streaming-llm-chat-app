@@ -2,11 +2,12 @@ import { useState } from 'react'
 import ChatMessage from './components/ChatMessage'
 import ChatInput from './components/ChatInput'
 import type { Message } from './types'
-import { sendMessage } from './services/api'
+import { sendMessageStream } from './services/api'
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState<string>('');
 
   const handleSendMessage = async (text: string) => {
     
@@ -17,17 +18,28 @@ function App() {
     setMessages(prev => [...messages, userMessage]);
 
     setIsLoading(true);
+    setStreamingMessage('');
+
+    let accumulatedText = '';
 
     try {
       const allMessages = [...messages, userMessage];
-      const response = await sendMessage(allMessages);
-      const assistantMessage: Message = {
+
+      await sendMessageStream(allMessages, (chunk) => {
+        accumulatedText += chunk;
+        //setStreamingMessage(prev => prev + chunk);
+        setStreamingMessage(accumulatedText);
+      });
+
+      setMessages(prev => [...prev, {
         role: 'assistant',
-        content: response
-      };
-      setMessages(prev => [...prev, assistantMessage]);
+        //content: streamingMessage
+        content: accumulatedText
+      }]);
+      setStreamingMessage('');
+
     } catch (error) {
-      console.error('Erreur lors de l\'appel API:', error);
+      console.error('Error:', error);
       const errorMessage: Message = {
         role: 'assistant',
         content: 'Désolé, une erreur est survenue. Veuillez réessayer.'
@@ -45,7 +57,12 @@ function App() {
         {messages.map((msg, index) => (
           <ChatMessage key={index} message={msg} />
         ))}
-        {isLoading && (
+        {streamingMessage && (
+          <ChatMessage 
+            message={{ role: 'assistant', content: streamingMessage }} 
+          />
+        )}
+        {isLoading && !streamingMessage && (
           <div className="loading-indicator">
             Assistant écrit...
           </div>
