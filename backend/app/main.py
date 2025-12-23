@@ -1,10 +1,19 @@
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
 from app.models import ChatRequest
 from app.services.openai_service import get_chat_response, get_chat_response_stream
 import json
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 async def event_generator(messages: list):
     for chunk in get_chat_response_stream(messages):
