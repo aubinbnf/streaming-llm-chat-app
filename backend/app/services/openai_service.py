@@ -13,3 +13,13 @@ def get_chat_response(messages: list) -> str:
         stream=False
     )
     return response.choices[0].message.content
+
+def get_chat_response_stream(messages: list):
+    stream = client.chat.completions.create(
+        model="gpt-4o",
+        messages=messages,
+        stream=True
+    )
+    for chunk in stream:
+        if chunk.choices[0].delta.content is not None:
+            yield chunk.choices[0].delta.content
