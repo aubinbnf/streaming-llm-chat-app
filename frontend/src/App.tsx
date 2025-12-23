@@ -1,22 +1,41 @@
 import { useState } from 'react'
-import viteLogo from '/vite.svg'
 import ChatMessage from './components/ChatMessage'
 import ChatInput from './components/ChatInput'
 import type { Message } from './types'
+import { sendMessage } from './services/api'
 
 function App() {
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'user', content: 'Bonjour !' },
-    { role: 'assistant', content: 'Bonjour ! Comment puis-je vous aider ?' }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSendMessage = (text: string) => {
-    console.log('Message envoyé:', text);
-    const newMessage: Message = {
+  const handleSendMessage = async (text: string) => {
+    
+    const userMessage: Message = {
       role: 'user',
       content: text
     };
-    setMessages([...messages, newMessage]);
+    setMessages(prev => [...messages, userMessage]);
+
+    setIsLoading(true);
+
+    try {
+      const allMessages = [...messages, userMessage];
+      const response = await sendMessage(allMessages);
+      const assistantMessage: Message = {
+        role: 'assistant',
+        content: response
+      };
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('Erreur lors de l\'appel API:', error);
+      const errorMessage: Message = {
+        role: 'assistant',
+        content: 'Désolé, une erreur est survenue. Veuillez réessayer.'
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -26,6 +45,11 @@ function App() {
         {messages.map((msg, index) => (
           <ChatMessage key={index} message={msg} />
         ))}
+        {isLoading && (
+          <div className="loading-indicator">
+            Assistant écrit...
+          </div>
+        )}
       </div>
       <ChatInput onSendMessage={handleSendMessage} />
     </div>
