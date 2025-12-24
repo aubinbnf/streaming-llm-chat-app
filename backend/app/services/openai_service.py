@@ -5,11 +5,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
 
 def get_chat_response(messages: list) -> str:
     try:
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model=OPENAI_MODEL,
             messages=messages,
             stream=False
         )
@@ -28,7 +29,7 @@ def get_chat_response(messages: list) -> str:
 def get_chat_response_stream(messages: list):
     try:
         stream = client.chat.completions.create(
-            model="gpt-4o",
+            model=OPENAI_MODEL,
             messages=messages,
             stream=True
         )

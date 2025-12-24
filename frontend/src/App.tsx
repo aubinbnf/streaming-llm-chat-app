@@ -4,6 +4,8 @@ import ChatInput from './components/ChatInput'
 import type { Message } from './types'
 import { sendMessageStream } from './services/api'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +25,7 @@ function App() {
     const loadHistory = async () => {
       if (sessionId) {
         try {
-          const response = await fetch(`http://localhost:8000/chat/session/${sessionId}`);
+          const response = await fetch(`${API_BASE_URL}/chat/session/${sessionId}`);
           if (response.ok) {
             const data = await response.json();
             setMessages(data.messages);
@@ -53,7 +55,7 @@ function App() {
 
     if (!currentSessionId) {
       try {
-        const response = await fetch('http://localhost:8000/chat/session', {
+        const response = await fetch(`${API_BASE_URL}/chat/session`, {
           method: 'POST'
         });
         const data = await response.json();

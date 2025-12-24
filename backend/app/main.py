@@ -5,6 +5,13 @@ from app.models import ChatRequest, StreamChatRequest
 from app.services.openai_service import get_chat_response_stream
 import json
 from uuid import uuid4
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173")
+SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT", "Tu es un assistant IA serviable et concis.")
 
 sessions: dict[str, list[dict]] = {}
 
@@ -12,7 +19,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[CORS_ORIGINS],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -63,7 +70,7 @@ def chat_stream(request: StreamChatRequest):
     user_message = request.message.model_dump()
     history.append(user_message)
 
-    system_message = {"role": "system", "content": "Tu es un assistant IA serviable et concis."}
+    system_message = {"role": "system", "content": SYSTEM_PROMPT}
 
     all_messages = [system_message] + history
 
