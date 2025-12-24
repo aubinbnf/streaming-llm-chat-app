@@ -40,9 +40,13 @@ function App() {
 
     } catch (error) {
       console.error('Error:', error);
+      let errorText = 'Désolé, une erreur est survenue. Veuillez réessayer.';
+      if (error instanceof Error) {
+        errorText = error.message;
+      }
       const errorMessage: Message = {
         role: 'assistant',
-        content: 'Désolé, une erreur est survenue. Veuillez réessayer.'
+        content: errorText
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
