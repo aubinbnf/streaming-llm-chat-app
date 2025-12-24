@@ -23,7 +23,12 @@ function App() {
     let accumulatedText = '';
 
     try {
-      const allMessages = [...messages, userMessage];
+      const systemMessage: Message = {
+        role: 'system',
+        content: 'Tu es un assistant IA serviable et concis.'
+      };
+
+      const allMessages = [systemMessage, ...messages, userMessage];
 
       await sendMessageStream(allMessages, (chunk) => {
         accumulatedText += chunk;
