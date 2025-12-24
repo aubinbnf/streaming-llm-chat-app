@@ -27,13 +27,11 @@ function App() {
 
       await sendMessageStream(allMessages, (chunk) => {
         accumulatedText += chunk;
-        //setStreamingMessage(prev => prev + chunk);
         setStreamingMessage(accumulatedText);
       });
 
       setMessages(prev => [...prev, {
         role: 'assistant',
-        //content: streamingMessage
         content: accumulatedText
       }]);
       setStreamingMessage('');
