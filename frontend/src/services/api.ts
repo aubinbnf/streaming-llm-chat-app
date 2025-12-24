@@ -2,7 +2,7 @@ import type { Message } from "../types";
 
 const API_BASE_URL = 'http://localhost:8000';
 
-export async function sendMessageStream(messages: Message[], onChunk: (chunk: string) => void): Promise<void> {
+export async function sendMessageStream(sessionId: string, message: Message, onChunk: (chunk: string) => void): Promise<void> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -12,7 +12,10 @@ export async function sendMessageStream(messages: Message[], onChunk: (chunk: st
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ messages }),
+            body: JSON.stringify({ 
+                session_id: sessionId,
+                message: message
+            }),
             signal: controller.signal
         });
 

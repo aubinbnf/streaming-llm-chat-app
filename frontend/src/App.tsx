@@ -9,6 +9,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [sessionId, setSessionId] = useState<string | null>(localStorage.getItem('chat_session_id'));
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -18,13 +19,58 @@ function App() {
       scrollToBottom();
   }, [messages, streamingMessage]);
 
+  useEffect(() => {
+    const loadHistory = async () => {
+      if (sessionId) {
+        try {
+          const response = await fetch(`http://localhost:8000/chat/session/${sessionId}`);
+          if (response.ok) {
+            const data = await response.json();
+            setMessages(data.messages);
+          } else if (response.status === 404) {
+            console.log('Session expirée, création d\'une nouvelle session');
+            setSessionId(null);
+            localStorage.removeItem('chat_session_id');
+          }
+        } catch (error) {
+          console.error('Erreur chargement historique:', error);
+        }
+      }
+    };
+
+    loadHistory();
+  }, []);
+
+  const handleNewConversation = () => {
+    localStorage.removeItem('chat_session_id');
+    setSessionId(null);
+    setMessages([]);
+    setStreamingMessage('');
+  };
+
   const handleSendMessage = async (text: string) => {
+    let currentSessionId = sessionId;
+
+    if (!currentSessionId) {
+      try {
+        const response = await fetch('http://localhost:8000/chat/session', {
+          method: 'POST'
+        });
+        const data = await response.json();
+        currentSessionId = data.session_id;
+        setSessionId(currentSessionId);
+        localStorage.setItem('chat_session_id', currentSessionId!);
+      } catch (error) {
+        console.error('Erreur création session:', error);
+        return;
+      }
+    }
     
     const userMessage: Message = {
       role: 'user',
       content: text
     };
-    setMessages(prev => [...messages, userMessage]);
+    setMessages(prev => [...prev, userMessage]);
 
     setIsLoading(true);
     setStreamingMessage('');
@@ -32,14 +78,7 @@ function App() {
     let accumulatedText = '';
 
     try {
-      const systemMessage: Message = {
-        role: 'system',
-        content: 'Tu es un assistant IA serviable et concis.'
-      };
-
-      const allMessages = [systemMessage, ...messages, userMessage];
-
-      await sendMessageStream(allMessages, (chunk) => {
+      await sendMessageStream(currentSessionId!, userMessage, (chunk) => {
         accumulatedText += chunk;
         setStreamingMessage(accumulatedText);
       });
@@ -68,7 +107,12 @@ function App() {
 
   return (
     <div className="App">
-      <h1>Chat LLM</h1>
+      <div className="header">
+        <button onClick={handleNewConversation} className="new-chat-btn">
+          Nouvelle conversation
+        </button>
+        <h1>Chat LLM</h1>
+      </div>
       <div className="messages-container">
         {messages.map((msg, index) => (
           <ChatMessage key={index} message={msg} />

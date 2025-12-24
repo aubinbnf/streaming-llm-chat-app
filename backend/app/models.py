@@ -7,3 +7,7 @@ class Message(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: list[Message]
+
+class StreamChatRequest(BaseModel):
+    session_id: str
+    message: Message
