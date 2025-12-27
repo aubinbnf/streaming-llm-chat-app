@@ -76,8 +76,8 @@ streaming-llm-chat-app/
 
 ### Prérequis
 
-- **Python 3.12+**
-- **Node.js 18+** et npm
+- **Python 3.14.2**
+- **Node.js 24.12.0** et **npm 11.7.0**
 - **Clé API OpenAI**
 
 ### Installation Backend
@@ -108,6 +108,8 @@ cd frontend
 
 # Installer les dépendances
 npm install
+
+cp .env.example .env
 ```
 
 ### Lancement de l'Application
