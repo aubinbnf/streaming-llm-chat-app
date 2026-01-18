@@ -25,20 +25,20 @@ function ChatInput({ onSendMessage, isDisabled = false }: ChatInputProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className='chat-input'>
-        <textarea
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Tapez votre message..."
-            rows={3}
-            disabled={isDisabled}
-        />
-        <button type="submit" disabled={isDisabled || !inputValue.trim()}>
-            Envoyer
-        </button>
+    <form onSubmit={handleSubmit} className="chat-input">
+      <textarea
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder="Tapez votre message..."
+        rows={3}
+        disabled={isDisabled}
+      />
+      <button type="submit" disabled={isDisabled || !inputValue.trim()}>
+        Envoyer
+      </button>
     </form>
-  )
+  );
 }
 
 export default ChatInput;

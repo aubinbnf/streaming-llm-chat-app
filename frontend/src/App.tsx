@@ -1,36 +1,41 @@
-import { useState, useRef, useEffect } from 'react'
-import ChatMessage from './components/ChatMessage'
-import ChatInput from './components/ChatInput'
-import type { Message } from './types'
-import { sendMessageStream } from './services/api'
+import { useState, useRef, useEffect } from 'react';
+import ChatMessage from './components/ChatMessage';
+import ChatInput from './components/ChatInput';
+import type { Message } from './types';
+import { sendMessageStream } from './services/api';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [sessionId, setSessionId] = useState<string | null>(localStorage.getItem('chat_session_id'));
+  const [sessionId, setSessionId] = useState<string | null>(
+    localStorage.getItem('chat_session_id'),
+  );
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
-      scrollToBottom();
+    scrollToBottom();
   }, [messages, streamingMessage]);
 
   useEffect(() => {
     const loadHistory = async () => {
       if (sessionId) {
         try {
-          const response = await fetch(`${API_BASE_URL}/chat/session/${sessionId}`);
+          const response = await fetch(
+            `${API_BASE_URL}/chat/session/${sessionId}`,
+          );
           if (response.ok) {
             const data = await response.json();
             setMessages(data.messages);
           } else if (response.status === 404) {
-            console.log('Session expirée, création d\'une nouvelle session');
+            console.log("Session expirée, création d'une nouvelle session");
             setSessionId(null);
             localStorage.removeItem('chat_session_id');
           }
@@ -41,6 +46,7 @@ function App() {
     };
 
     loadHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleNewConversation = () => {
@@ -56,7 +62,7 @@ function App() {
     if (!currentSessionId) {
       try {
         const response = await fetch(`${API_BASE_URL}/chat/session`, {
-          method: 'POST'
+          method: 'POST',
         });
         const data = await response.json();
         currentSessionId = data.session_id;
@@ -67,12 +73,12 @@ function App() {
         return;
       }
     }
-    
+
     const userMessage: Message = {
       role: 'user',
-      content: text
+      content: text,
     };
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
 
     setIsLoading(true);
     setStreamingMessage('');
@@ -85,12 +91,14 @@ function App() {
         setStreamingMessage(accumulatedText);
       });
 
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: accumulatedText
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: accumulatedText,
+        },
+      ]);
       setStreamingMessage('');
-
     } catch (error) {
       console.error('Error:', error);
       let errorText = 'Désolé, une erreur est survenue. Veuillez réessayer.';
@@ -99,9 +107,9 @@ function App() {
       }
       const errorMessage: Message = {
         role: 'assistant',
-        content: errorText
+        content: errorText,
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -120,18 +128,16 @@ function App() {
           <ChatMessage key={index} message={msg} />
         ))}
         {streamingMessage && (
-          <ChatMessage 
-            message={{ role: 'assistant', content: streamingMessage }} 
+          <ChatMessage
+            message={{ role: 'assistant', content: streamingMessage }}
           />
         )}
         {isLoading && !streamingMessage && (
-          <div className="loading-indicator">
-            Assistant écrit...
-          </div>
+          <div className="loading-indicator">Assistant écrit...</div>
         )}
         <div ref={messagesEndRef} />
       </div>
-      <ChatInput onSendMessage={handleSendMessage} isDisabled={isLoading}/>
+      <ChatInput onSendMessage={handleSendMessage} isDisabled={isLoading} />
     </div>
   );
 }
